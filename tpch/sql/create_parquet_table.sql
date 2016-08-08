@@ -1,0 +1,83 @@
+create table SUPPLIER(
+S_SUPPKEY string,
+S_NAME string,
+S_ADDRESS string,
+S_NATIONKEY string,
+S_PHONE string,
+S_ACCTBAL decimal,
+S_COMMENT string
+)stored as parquet;
+
+create table PART (
+P_PARTKEY string,
+P_NAME string,
+P_MFGR string,
+P_BRAND string,
+P_TYPE string,
+P_SIZE int,
+P_CONTAINER string,
+P_RETAILPRICE decimal,
+P_COMMENT string
+)stored as parquet;
+
+create table PARTSUPP (
+PS_PARTKEY string,
+PS_SUPPKEY  string,
+PS_AVAILQTY  int,
+PS_SUPPLYCOST  decimal,
+PS_COMMENT  string
+)stored as parquet;
+
+create table CUSTOMER(                                                          
+C_CUSTKEY string,
+C_NAME string,
+C_ADDRESS string,
+C_NATIONKEY string,
+C_PHONE string,
+C_ACCTBAL decimal,
+C_MKTSEGMENT string,
+)stored as parquet;
+
+create table ORDERS(                                                          
+O_ORDERKEY string,
+O_CUSTKEY string,
+O_ORDERSTATUS string,
+O_TOTALPRICE decimal,
+O_ORDERDATE date,
+O_ORDERPRIORITY string,
+O_CLERK string,
+O_SHIPPRIORITY int,
+O_COMMENT       string                                                                 
+)stored as parquet;
+
+create table LINEITEM(                                                          
+L_ORDERKEY string,
+L_PARTKEY string,
+L_SUPPKEY   string,
+L_LINENUMBER int,
+L_QUANTITY decimal,
+L_EXTENDEDPRICE decimal,
+L_DISCOUNT decimal,
+L_TAX decimal,
+L_RETURNFLAG string,
+L_LINESTATUS string,
+L_SHIPDATE date,
+L_COMMITDATE date,
+L_RECEIPTDATE date,
+L_SHIPINSTRUCT string,
+L_SHIPMODE string,
+L_COMMENT  string                                        
+)stored as parquet;
+
+create table NATION (                                                          
+N_NATIONKEY string,
+N_NAME string,
+N_REGIONKEY string,
+N_COMMENT  string                                                             
+)stored as parquet;
+
+create table REGION(                                                          
+R_REGIONKEY string,
+R_NAME string,
+R_COMMENT string                                                                       
+)stored as parquet;

@@ -1,0 +1,16 @@
+load data inpath "/data/nation.sql" overwrite into table nation; 
+select * from nation limit 10; 
+load data inpath "/data/orders.sql" overwrite into table orders; 
+select * from orders limit 10; 
+load data inpath "/data/partsup.sql" overwrite into table partsupp; 
+select * from partsupp limit 10; 
+load data inpath "/data/par.sql" overwrite into table part; 
+select * from part limit 10; 
+load data inpath "/data/regio.sql" overwrite into table region; 
+select * from region limit 10; 
+load data inpath "/data/supplie.sql" overwrite into table supplier; 
+select * from supplier limit 10; 
+load data inpath "/data/lineite.sql" overwrite into table lineitem; 
+select * from lineitem limit 10; 
+load data inpath "/data/custome.sql" overwrite into table customer; 
+select * from customer limit 10;

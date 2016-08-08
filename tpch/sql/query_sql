@@ -1,0 +1,688 @@
+("q1", """
+             |select
+             |l_returnflag,
+             |l_line        status,
+             |sum(l_quantity) as sum_qty,
+             |sum(l     _extendedprice) as sum_base_price,
+             |sum(l_extendedprice *  (1 - l_discount)) as sum_disc_price,
+             |sum(l_extendedpric    e * (1 - l_discount) * (1 + l_tax)) as sum_charge,
+             |avg(l _quantity) as avg_qty,
+             |avg(l_extendedprice) as avg_price ,
+             |avg(l_discount) as avg_disc,
+             |count(*) a        s count_order
+             |from
+             |tpch.lineitem
+                |where
+             |l_shipdate <= '1998-09-02'
+             |grou  p by
+             |l_returnflag,
+             |l_linestatus
+                    |order by
+             |l_returnflag,
+             |l_linestatus
+                   """.stripMargin),
+    ("q2", """
+             | select
+             |s_acctbal,
+             |s_name,
+             |n_name,
+                         |p_partkey,
+             |p_mfgr,
+             |s_address,
+                         |s_phone,
+             |s_comment
+             |from
+                  |tpch.part,
+             |tpch.supplier,
+             |tpch.pa           rtsupp,
+             |tpch.nation,
+             |tpch.region,
+                  |(select
+             |                            min(ps_supply cost) v_ps_supplycost,
+             |                            ps_partkey v_ps_partkey
+             |                   from
+             |                            tpch.partsupp t1,
+             |                            tpch.supplier t2,
+             |                            tpch.nation t3,
+             |                            tpch.region t4
+             |                   where
+             |                            t2.s_suppkey = t1.ps_suppkey
+             |                            and t2.s_nationkey = t3.n_nationkey
+             |                            and t3.n_regionkey = t4.r_regionkey
+             |                            and t4.r_name = 'EUROPE'
+             |                   group by
+             |                            ps_partkey) v
+             |where
+             |p_partkey = ps_part   key
+             |and s_suppkey = ps_suppkey
+             |and p_size         = 15
+             |and p_type like '%BRASS'
+             |and s_nati        onkey = n_nationkey
+             |and n_regionkey = r_regionkey
+               |and r_name = 'EUROPE'
+             |and ps_supplycost = v.v_p     s_supplycost
+             |and p_partkey = v.v_ps_partkey
+                 |order by
+             |s_acctbal desc,
+             |n_name,
+                   |s_name,
+             |p_partkey
+           """.stripMargin),
+            ("q3", """
+             | select
+             |l_orderkey,
+              |sum(l_extendedprice * (1 - l_discount)) as revenue,
+              |o_orderdate,
+             |o_shippriority
+             |from
+                    |tpch.customer,
+             |tpch.orders,
+             |tpc           h.lineitem
+             |where
+             |c_mktsegment = 'BUILDING' 
+             |and c_custkey = o_custkey
+             |and l_orderkey         = o_orderkey
+             |and o_orderdate < date '1995-03-15'
+               |and l_shipdate > date '1995-03-15'
+             |group by
+                 |l_orderkey,
+             |o_orderdate,
+             |o_shi         ppriority
+             |order by
+             |revenue desc,
+                |o_orderdate
+           """.stripMargin),
+    ("q4", """
+                |select
+             |o_orderpriority,
+             |count(*) as       order_count
+             |from
+             |tpch.orders
+                |left semi join
+             |(select l_orderkey  from tpch.lineitem        where l_commitdate < l_receiptdate) l
+             |on l_orderkey = o_    orderkey
+             |where
+             |o_orderdate >= date '1993-0   7-01'
+             |and o_orderdate < date '1993-10-01'
+             |  
+             |group by
+             |o_orderpriority
+             |or    der by
+             |o_orderpriority
+           """.stripMargin),
+        ("q5", """
+             | select
+             |n_name,
+             |      sum(l_extendedprice * (1 - l_discount)) as revenue
+             |from
+             |tpch.customer,
+             |tpch.orders,
+             |          tpch.lineitem,
+             |tpch.supplier,
+             |tpch.natio        n,
+             |tpch.region
+             |where
+             |c_cust        key = o_custkey
+             |and l_orderkey = o_orderkey
+                 |and l_suppkey = s_suppkey
+             |and c_nationkey = s_nationk       ey
+             |and s_nationkey = n_nationkey
+             |and n_re      gionkey = r_regionkey
+             |and r_name = 'ASIA'
+             |      and o_orderdate >= date '1994-01-01'
+             |and o_orderdate <     date '1995-01-01'
+             |group by
+             |n_name
+                 |order by
+             |revenue desc
+           """.stripMargin),    
+    ("q6", """
+             | select
+             |sum(l_extendedpric    e * l_discount) as revenue
+             |from
+             |tpch.linei    tem
+             |where
+             |l_shipdate >= date '1994-01-01'
+                 |and l_shipdate < date '1995-01-01'
+             |and l_        discount between 0.05 and 0.07
+             |and l_quantity < 24
+              """.stripMargin),
+    ("q7", """
+             |select
+             |supp_nation,
+             |cust_nation,
+             |l_year,
+                      |sum(volume) as revenue
+             |from
+             |(
+                     |select
+             |n1.n_name as supp_nation,
+                                |n2.n_name as cust_nation,
+             |case
+             |wh                                    en l_shipdate  between '1995-01-01' and '1996-12-31' then '1995'
+             |else '1996' end as l_year,
+             |l_extendedprice * (1                   - l_discount) as volume
+             |from
+             |tpch.sup                  plier,
+             |tpch.lineitem,
+             |tpch.orders,
+                                   |tpch.customer,
+             |tpch.nation n1,
+                                     |tpch.nation n2
+             |where
+             |s_suppke                              y = l_suppkey
+             |and o_orderkey = l_orderkey
+                         |and c_custkey = o_custkey
+             |and s_nationkey = n1.n_                       nationkey
+             |and c_nationkey = n2.n_nationkey
+                      |and (
+             |(n1.n_name = 'FRANCE' and n2.n_name = 'GE                         RMANY')
+             |or (n1.n_name = 'GERMANY' and n2.n_name = 'FR             ANCE')
+             |)
+             |and l_shipdate between '1995                      -01-01' and  '1996-12-31'
+             |) as shipping
+             |gr    oup by
+             |supp_nation,
+             |cust_nation,
+                     |l_year
+             |order by
+             |supp_nation,
+                   |cust_nation,
+             |l_year
+           """.stripMargin)     ,
+    ("q8", """
+             | select
+             |o_year,
+                |sum(case
+             |when nation = 'BRAZIL' then volume
+                        |else  volume
+             |end) / sum(volume) as mkt_share
+                         |from
+             |(
+             |select
+                         | case when o_orderdate  between '1995-01-01' and '1995-12-31' then        1995
+             |else 1996 end as o_year,
+             |l_exten                       dedprice * (1 - l_discount) as volume,
+             |n2.n_name as na           tion
+             |from
+             |tpch.part,
+             |                              tpch.supplier,
+             |tpch.lineitem,
+             |tpch.or                       ders,
+             |tpch.customer,
+             |tpch.nation n1,
+                                     |tpch.nation n2,
+             |tpch.region
+                                    |where
+             |p_partkey = l_partkey
+             |an                                d s_suppkey = l_suppkey
+             |and l_orderkey = o_orderkey
+                       |and o_custkey = c_custkey
+             |and c_nationk                     ey = n1.n_nationkey
+             |and n1.n_regionkey = r_regionkey
+                        |and r_name = 'AMERICA'
+             |and s_nationkey                        = n2.n_nationkey
+             |and o_orderdate between date '1995-0          1-01' and date '1996-12-31'
+             |and p_type = 'ECONOMY ANOD            IZED STEEL'
+             |) a
+             |group by
+             |o_        year
+             |order by
+             |o_year
+           """.stripM   argin),
+    ("q9", """
+             |select
+             |nation,
+                 |o_year,
+             |sum(amount) as sum_profit
+                  |from
+             |(
+             |select *
+             |#n_n                      ame as nation,
+             |# substr(o_orderdate,1,4) as o_year,
+                       |#l_extendedprice * (1 - l_discount) - ps_supplycost * l_            quantity as amount
+             |from
+             |tpch.part,
+                              |tpch.supplier,
+             |#tpch.lineitem,
+                                    |#tpch.partsupp,
+             |#tpch.orders,
+             |                              #tpch.nation
+             |where
+             |s_suppkey = l_supp                        key
+             |#and ps_suppkey = l_suppkey
+             |#and                      ps_partkey = l_partkey
+             |#and p_partkey = l_partkey
+                         |#and o_orderkey = l_orderkey
+             |      and s_nat           ionkey = n_nationkey
+             |and p_name like '%green%'
+                      |) as profit
+             |group by
+             |nation,
+                    |o_year
+             |order by
+             |nation,
+                     |o_year desc
+           """.stripMargin),
+   ("q10", """
+                  |select
+              |c_custkey,
+              |c_name,
+                    |sum(l_extendedprice * (1 - l_discount)) as revenue,
+                 |c_acctbal,
+              |n_name,
+              |c_address,
+                        |c_phone,
+              |c_comment
+              |from
+                    |tpch.customer,
+              |tpch.orders,
+                     |tpch.lineitem,
+              |tpch.nation
+              |where
+                      |c_custkey = o_custkey
+              |and l_orderkey = o_or        derkey
+              |and o_orderdate >= date '1993-10-01'
+               |and o_orderdate < date '1994-01-01'
+              |and l_returnfl       ag = 'R'
+              |and c_nationkey = n_nationkey
+              |g    roup by
+              |c_custkey,
+              |c_name,
+                      |c_acctbal,
+              |c_phone,
+              |n_name,
+                       |c_address,
+              |c_comment
+              |order by
+                     |revenue desc
+            """.stripMargin),
+    ("q11", "   ""
+              | select
+              |ps_partkey,
+              |s        um(ps_supplycost * ps_availqty) as value
+              |from
+              |tpch.partsupp,
+              |tpch.supplier,
+              |tpc          h.nation,
+              |(
+              |select
+              |s                        um(ps_supplycost * ps_availqty) * 0.0001000000 s
+              |from
+                      |tpch.partsupp,
+              |tpch.supplier,
+                                     |tpch.nation
+              |where
+              |ps_su                                ppkey = s_suppkey
+              |and s_nationkey = n_nationkey
+                         |and n_name = 'GERMANY'
+              |) v
+              |             where
+              |ps_suppkey = s_suppkey
+              |and s_nati       onkey = n_nationkey
+              |and n_name = 'GERMANY'
+                  |group by
+              |ps_partkey, v.s having
+              |sum          (ps_supplycost * ps_availqty) > v.s
+              |order by
+              |value desc
+            """.stripMargin),
+    ("q12", """
+                | select
+              |l_shipmode,
+              |sum(case
+                     |when o_orderpriority = '1-URGENT'
+              |or o_or                  derpriority = '2-HIGH'
+              |then 1
+              |else 0                   
+              |end) as high_line_count,
+              |sum(case
+                      |when o_orderpriority <> '1-URGENT'
+              |and o                    _orderpriority <> '2-HIGH'
+              |then 1
+              |el                   se 0
+              |end) as low_line_count
+              |from
+               |tpch.orders,
+              |tpch.lineitem
+              |wher     e
+              |o_orderkey = l_orderkey
+              |and l_shipmod        e in ('MAIL', 'SHIP')
+              |and l_commitdate < l_receiptdate
+                  |and l_shipdate < l_commitdate
+              |and l_rec        eiptdate >= date '1994-01-01'
+              |and l_receiptdate < date     '1995-01-01'
+              |group by
+              |l_shipmode
+               |order by
+              |l_shipmode
+            """.stripMargin ),
+    ("q13", """
+              | select
+              |c_count,
+                  |count(*) as custdist
+              |from
+              |(
+                      |select
+              |c_custkey,
+              |                             count(o_orderkey) as c_count
+              |from
+              |tp                   ch.customer left outer join tpch.orders on
+              |c_custkey                 = o_custkey
+              |and o_comment not like '%special%reques              ts%'
+              |group by
+              |c_custkey
+                                  |) v
+              |group by
+              |c_count
+              |     order by
+              |custdist desc,
+              |c_count desc
+                  """.stripMargin),
+    ("q14", """
+              |select
+              |100.00 * sum(case
+              |when p_type like 'PROMO%'
+                          |then l_extendedprice * (1 - l_discount)
+              |                 else l_extendedprice * (1 - l_discount)
+              |end) / sum(l_ex  tendedprice * (1 - l_discount)) as promo_revenue
+              |from
+              |tpch.lineitem,
+              |tpch.part
+              |where
+                      |l_partkey = p_partkey
+              |and l_shipdate >=         date '1995-09-01'
+              |and l_shipdate < date '1995-10-01'
+               """.stripMargin),
+    ("q15", """
+              |select
+              |    s_suppkey,
+              |    s_name,
+              |    s_address,
+              |    s_phone,
+              |    total_revenue
+              |from
+              |    tpch.supplier,
+              |    (
+              |        select
+              |            l_suppkey supplier_no,
+              |            sum(l_extendedprice * (1 - l_discount)) total_revenue
+              |        from
+              |            tpch.lineitem
+              |        where
+              |            l_shipdate >= date '1996-01-01'
+              |            and l_shipdate < date '1996-04-01'
+              |        group by
+              |            l_suppkey
+              |    ) revenue0,
+              |    (
+              |        select
+              |            max(total_revenue) m_max
+              |        from
+              |            (
+              |                select
+              |                    l_suppkey supplier_no,
+              |                    sum(l_extendedprice * (1 - l_discount)) total_revenue
+              |                from
+              |                    tpch.lineitem
+              |                where
+              |                    l_shipdate >= date '1996-01-01'
+              |                    and l_shipdate < date '1996-04-01'
+              |                group by
+              |                    l_suppkey
+              |            ) v1
+              |    ) v
+              |where
+              |    s_suppkey = supplier_no
+              |    and total_revenue = v.m_max
+              |order by
+              |    s_suppkey
+            """.stripMargin),
+    ("q16", """
+              | select
+              |         p_type,
+              |         p_size,
+              |         count(distinct ps_suppkey) as supplier_cnt
+              |from
+              |         tpch.partsupp,
+              |         tpch.part,
+              |         (
+              |                   select
+              |                       s_suppkey m_s_suppkey
+              |                   from
+              |                            tpch.supplier
+              |                   where
+              |                            s_comment like '%Customer%Complaints%'
+              |         ) v
+              |where
+              |         p_partkey = ps_partkey
+              |         and p_brand <> 'Brand#45'
+              |         and p_type not like 'MEDIUM POLISHED%'
+              |         and p_size in (49, 14, 23, 45, 19, 3, 36, 9)
+              |         and (ps_suppkey = v.m_s_suppkey or ps_suppkey != v.m_s_suppkey)
+              |group by
+              |         p_brand,
+              |         p_type,
+              |         p_size
+              |order by
+              |         supplier_cnt desc,
+              |         p_brand,
+              |         p_type,
+              |         p_size
+            """.stripMargin),
+    ("q17", """
+              | select
+              |         sum(l_extendedprice) / 7.0 as avg_yearly
+              |from
+              |         tpch.lineitem,
+              |         tpch.part,
+              |         (
+              |                   select
+              |                            l_partkey m_l_partkey,
+              |                            0.2 * avg(l_quantity) m_avg
+              |                   from
+              |                            tpch.lineitem
+              |                   group by
+              |                            l_partkey
+              |         ) v
+              |where
+              |         p_partkey = l_partkey
+              |         and p_brand = 'Brand#23'
+              |         and p_container = 'MED BOX'
+              |         and p_partkey = v.m_l_partkey
+              |         and l_quantity < v.m_avg
+            """.stripMargin),
+    ("q18", """
+              | select
+              |         p_brand,
+              |         p_type,
+              |         p_size,
+              |         count(distinct ps_suppkey) as supplier_cnt
+              |from
+              |         tpch.partsupp,
+              |         tpch.part,
+              |         (
+              |                   select
+              |                       s_suppkey m_s_suppkey
+              |                   from
+              |                            tpch.supplier
+              |                   where
+              |                            s_comment like '%Customer%Complaints%'
+              |         ) v
+              |where
+              |         p_partkey = ps_partkey
+              |         and p_brand <> 'Brand#45'
+              |         and p_type not like 'MEDIUM POLISHED%'
+              |         and p_size in (49, 14, 23, 45, 19, 3, 36, 9)
+              |         and (ps_suppkey = v.m_s_suppkey or ps_suppkey != v.m_s_suppkey)
+              |group by
+              |         p_brand,
+              |         p_type,
+              |         p_size
+              |order by
+              |         supplier_cnt desc,
+              |         p_brand,
+              |         p_type,
+              |         p_size
+            """.stripMargin),
+    ("q19", """
+              |select
+              |sum(l_extendedprice* (1 - l  _discount)) as revenue
+              |from
+              |tpch.lineite m,
+              |tpch.part
+              |where
+              |(
+                   |p_partkey = l_partkey
+              |and p_brand = 'Bra               nd#12'
+              |and p_container in ('SM CASE', 'SM BOX', 'SM PA      CK', 'SM PKG')
+              |and l_quantity >= 1 and l_quantity <= 1       + 10
+              |and p_size between 1 and 5
+              |and              l_shipmode in ('AIR', 'AIR REG')
+              |and l_shipinstruct =         'DELIVER IN PERSON'
+              |)
+              |or
+                    |(
+              |p_partkey = l_partkey
+              |and p_brand                   = 'Brand#23'
+              |and p_container in ('MED BAG', 'MED BOX'     , 'MED PKG', 'MED PACK')
+              |and l_quantity >= 10 and l_qu        antity <= 10 + 10
+              |and p_size between 1 and 10
+                      |and l_shipmode in ('AIR', 'AIR REG')
+              |and l_sh             ipinstruct = 'DELIVER IN PERSON'
+              |)
+              |or
+                     |(
+              |p_partkey = l_partkey
+              |                 and p_brand = 'Brand#34'
+              |and p_container in ('LG CAS      E', 'LG BOX', 'LG PACK', 'LG PKG')
+              |and l_quantity >= 2      0 and l_quantity <= 20 + 10
+              |and p_size between 1 and 1       5
+              |and l_shipmode in ('AIR', 'AIR REG')
+              |             and l_shipinstruct = 'DELIVER IN PERSON'
+              |)
+              """.stripMargin),
+    ("q20", """
+              |select
+              |    s_name,
+              |    s_address
+              |from
+              |    tpch.supplier,
+              |    tpch.nation,
+              |    (
+              |        select
+              |            ps_suppkey m_ps_suppkey
+              |        from
+              |            tpch.partsupp,
+              |            (
+              |                select
+              |                    l_partkey m_l_partkey,
+              |                    l_suppkey m_l_suppkey,
+              |                    0.5 * sum(l_quantity) m_sum
+              |                from
+              |                    tpch.lineitem
+              |                where
+              |                    l_shipdate >= date '1994-01-01'
+              |                    and l_shipdate < date '1995-01-01'
+              |                group by
+              |                    l_partkey, l_suppkey
+              |            ) v1,
+              |            (
+              |                select
+              |                    p_partkey m_p_partkey
+              |                from
+              |                    tpch.part
+              |                where
+              |                    p_name like 'forest%'
+              |            ) v2
+              |        where
+              |            ps_partkey = v2.m_p_partkey
+              |            and ps_availqty > v1.m_sum
+              |            and v1.m_l_partkey = ps_partkey
+              |            and v1.m_l_suppkey = ps_suppkey
+              |    ) v3
+              |where
+              |    s_suppkey = v3.m_ps_suppkey
+              |    and s_nationkey = n_nationkey
+              |    and n_name = 'CANADA'
+              |order by
+              |    s_name
+             """.stripMargin),
+    ("q21", """
+              |select
+              |         s_name,
+              |         count(*) as numwait
+              |from
+              |         tpch.supplier,
+              |         tpch.lineitem l1,
+              |         tpch.orders,
+              |         tpch.nation,
+              |         (
+              |                   select
+              |                            l_orderkey m2_l_orderkey,
+              |                            l_suppkey m2_l_suppkey
+              |                   from
+              |                            tpch.lineitem l2
+              |         ) v2,
+              |         (
+              |                   select
+              |                            l_orderkey m3_l_orderkey,
+              |                            l_suppkey m3_l_suppkey
+              |                   from
+              |                            tpch.lineitem l3
+              |                   where
+              |                            l3.l_receiptdate > l3.l_commitdate
+              |         ) V3
+              |where
+              |         s_suppkey = l1.l_suppkey
+              |         and o_orderkey = l1.l_orderkey
+              |         and o_orderstatus = 'F'
+              |         and l1.l_receiptdate > l1.l_commitdate
+              |         and v2.m2_l_orderkey = l1.l_orderkey
+              |         and v2.m2_l_suppkey <> l1.l_suppkey
+              |         and (v3.m3_l_orderkey <> l1.l_orderkey or v3.m3_l_suppkey = l1.l_suppkey)
+              |         and s_nationkey = n_nationkey
+              |         and n_name = 'SAUDI ARABIA'
+              |group by
+              |         s_name
+              |order by
+              |         numwait desc,
+              |         s_name
+            """.stripMargin),
+    ("q22", """
+              |select
+              |    cntrycode,
+              |    count(*) as numcust,
+              |    sum(c_acctbal) as totacctbal
+              |from
+              |    (
+              |        select
+              |            substring(c_phone,1 ,2) as cntrycode,
+              |            c_acctbal
+              |        from
+              |            tpch.customer,
+              |                            (
+              |                select
+              |                    avg(c_acctbal) m1_avg
+              |                from
+              |                    tpch.customer
+              |                where
+              |                    c_acctbal > 0.00
+              |                    and substring(c_phone,1,2) in
+              |                        ('13', '31', '23', '29', '30', '18', '17')
+              |            ) v1,
+              |                            orders
+              |        where
+              |            substring(c_phone,1, 2) in
+              |                ('13', '31', '23', '29', '30', '18', '17')
+              |            and c_acctbal > v1.m1_avg
+              |            and (o_custkey = c_custkey or o_custkey <> c_custkey)
+              |    ) as custsale
+              |group by
+              |    cntrycode
+              |order by
+              |    cntrycode
+            """.stripMargin)
+  )
+)
+
